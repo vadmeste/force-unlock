@@ -174,7 +174,7 @@ func main() {
 		for _, d := range server.Disks {
 			if d.DrivePath != "" {
 				endpoints = append(endpoints,
-					strings.ToLower(u.Scheme)+"://"+server.Endpoint+path.Join("/minio/lock/", d.DrivePath, "/v5/force-unlock"))
+					strings.ToLower(u.Scheme)+"://"+server.Endpoint+path.Join("/minio/lock/", d.DrivePath, "/v4/force-unlock"))
 			}
 		}
 	}
