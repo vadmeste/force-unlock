@@ -28,10 +28,13 @@ var endpoint string
 var accessKey string
 var secretKey string
 
+var legacyLock bool
+
 func init() {
 	flag.StringVar(&alias, "alias", "", "Alias name defined in .mc/config.json (mandatory)")
 	flag.StringVar(&resource, "resource", "", "Resource name that you want to unlock, e.g: testbucket/testobject (mandatory)")
 	flag.StringVar(&customMCDir, "custom-mc-dir", "", "Path where mc config directory lives (optional)")
+	flag.BoolVar(&legacyLock, "legacy-lock-api", false, "Use the legacy lock API, v4+drivePath (optional)")
 }
 
 type aliasInfo struct {
@@ -169,18 +172,22 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	lockPath := "/minio/lock/v5/force-unlock"
+
 	var endpoints []string
 	for _, server := range info.Servers {
 		for _, d := range server.Disks {
 			if d.DrivePath != "" {
+				if legacyLock {
+					lockPath = fmt.Sprintf("/minio/lock/%s/v4/force-unlock", d.DrivePath)
+				}
 				endpoints = append(endpoints,
-					strings.ToLower(u.Scheme)+"://"+server.Endpoint+path.Join("/minio/lock/", d.DrivePath, "/v4/force-unlock"))
+					strings.ToLower(u.Scheme)+"://"+server.Endpoint+lockPath)
 			}
 		}
 	}
 
 	for _, endpoint := range endpoints {
-
 		var buffer bytes.Buffer
 		buffer.WriteString(resource)
 		buffer.WriteString("\n")
